@@ -9,8 +9,8 @@ run:
   command: uvicorn src.backend.server:app --host 0.0.0.0 --port 8000
   network:
     port: 8000
-    env:
-      # Default environment variables
-      APP_ENV: production
-      # Ensure python output is sent straight to terminal (container logs)
-      PYTHONUNBUFFERED: 1
+  env:
+    - name: APP_ENV
+      value: production
+    - name: PYTHONUNBUFFERED
+      value: "1"
