@@ -1,11 +1,10 @@
 version: 1.0
-runtime: python3
+runtime: python311
 build:
   commands:
     build:
       - pip install -r requirements.txt
 run:
-  # Using the same command as your Dockerfile, serving on port 8000
   command: uvicorn src.backend.server:app --host 0.0.0.0 --port 8000
   network:
     port: 8000
@@ -14,3 +13,5 @@ run:
       value: production
     - name: PYTHONUNBUFFERED
       value: "1"
+    - name: PYTHONPATH
+      value: "."
