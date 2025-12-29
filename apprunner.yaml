@@ -3,10 +3,10 @@ runtime: python311
 build:
   commands:
     build:
-      - python -m pip install --upgrade pip setuptools wheel
-      - python -m pip install -r requirements.txt
+      - python3 -m pip install --upgrade pip setuptools wheel
+      - python3 -m pip install -r requirements.txt
 run:
-  command: python -m uvicorn src.backend.server:app --host 0.0.0.0 --port 8000
+  command: python3 -m uvicorn src.backend.server:app --host 0.0.0.0 --port 8000
   network:
     port: 8000
   env:

@@ -4,6 +4,7 @@ python-multipart==0.0.9
 python-dotenv==1.0.1
 pytest==8.3.3
 boto3==1.35.0
-Pillow==10.3.0
+Pillow
 python-jose[cryptography]
-passlib[bcrypt]
+passlib[argon2]
+argon2-cffi
