@@ -313,12 +313,46 @@
         <div class="logo-icon"></div>
         <h1>Dog Translator</h1>
       </a>
-      <div class="header-actions">
+      <div class="header-actions" style="display: flex; gap: 10px;">
+        <button id="authBtn" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Login / Sign
+          Up</button>
+        <button id="logoutBtn" class="btn btn-outline"
+          style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem;">Logout</button>
         <button id="themeToggle" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Light
           Mode</button>
       </div>
     </div>
   </header>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="modal-overlay"
+    style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1.5rem;">
+    <div class="glass-card" style="max-width:400px; width:100%; position:relative;">
+      <button id="closeAuth" class="btn btn-outline"
+        style="position:absolute; top:1rem; right:1rem; padding:0.4rem 0.8rem;">&times;</button>
+      <h3 style="margin-bottom:1.5rem;">Welcome to Dog Translator</h3>
+      <p style="color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem;">Enter your email to sign in or create a new
+        account.</p>
+      <form id="authForm" novalidate>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; font-size:0.85rem; margin-bottom:0.5rem; color:var(--muted);">Email
+            Address</label>
+          <input type="text" id="authEmail" required
+            style="width:100%; padding:0.75rem; border-radius:12px; border:1px solid var(--border); background:var(--panel); color:var(--text);"
+            placeholder="buddy@example.com">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block; font-size:0.85rem; margin-bottom:0.5rem; color:var(--muted);">Password</label>
+          <input type="password" id="authPassword" required
+            style="width:100%; padding:0.75rem; border-radius:12px; border:1px solid var(--border); background:var(--panel); color:var(--text);"
+            placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary"
+          style="width:100%; padding:1rem; font-size:1rem;">Continue</button>
+      </form>
+      <div id="authStatus" style="margin-top:1rem; text-align:center; font-size:0.85rem;"></div>
+    </div>
+  </div>
 
   <div class="hero">
     <h2>Understand What Your Best Friend is Thinking</h2>
@@ -326,84 +360,98 @@
   </div>
 
   <main class="container">
-    <div class="glass-card">
-      <div class="grid-layout">
-        <div class="main-panel">
-          <div class="panel">
-            <h3>Image Source</h3>
-            <div id="dropzone" class="dropzone">
-              <input id="file" type="file" accept="image/png,image/jpeg" />
-              <div style="font-size: 1.1rem; font-weight: 500;">Click to upload or drag & drop</div>
-              <div style="color: var(--muted); font-size: 0.9rem; margin-top: 8px;">Supports JPG and PNG</div>
-            </div>
+    <!-- Landing Auth Prompt (shown when logged out) -->
+    <div id="loggedOutView" style="text-align:center; padding:4rem 0;">
+      <div class="glass-card" style="max-width:600px; margin:0 auto;">
+        <h3 style="color:var(--text); text-transform:none;">Ready to translate?</h3>
+        <p style="color:var(--muted); margin-bottom:2rem;">Sign in to start interpreting your dog's body language and
+          save your history.</p>
+        <button class="btn btn-primary btn-auth-trigger" style="padding:1rem 2rem; font-size:1.1rem;">Get Started for
+          Free</button>
+      </div>
+    </div>
 
-            <div class="control-group">
-              <div class="control-item">
-                <span>Tone:</span>
-                <select id="toneSelect">
-                  <option value="">Default</option>
-                  <option value="playful">Playful</option>
-                  <option value="calm">Calm</option>
-                  <option value="trainer">Trainer</option>
-                </select>
+    <!-- Main Content (shown when logged in) -->
+    <div id="loggedInView" style="display:none;">
+      <div class="glass-card">
+        <div class="grid-layout">
+          <div class="main-panel">
+            <div class="panel">
+              <h3>Image Source</h3>
+              <div id="dropzone" class="dropzone">
+                <input id="file" type="file" accept="image/png,image/jpeg" />
+                <div style="font-size: 1.1rem; font-weight: 500;">Click to upload or drag & drop</div>
+                <div style="color: var(--muted); font-size: 0.9rem; margin-top: 8px;">Supports JPG and PNG</div>
               </div>
-              <label class="control-item"><input id="saveShare" type="checkbox" /><span>Save & Share</span></label>
-              <label class="control-item"><input id="optimize" type="checkbox" checked /><span>Optimize</span></label>
-            </div>
 
-            <div style="margin-top: 2rem; display: flex; align-items: center; gap: 12px;">
-              <button id="submit" class="btn btn-primary" style="flex: 1; font-size: 1.1rem; padding: 1rem;">Translate
-                Body Language</button>
-              <div id="loader" class="spinner" style="display:none"></div>
-            </div>
-            <div id="status" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+              <div class="control-group">
+                <div class="control-item">
+                  <span>Tone:</span>
+                  <select id="toneSelect">
+                    <option value="">Default</option>
+                    <option value="playful">Playful</option>
+                    <option value="calm">Calm</option>
+                    <option value="trainer">Trainer</option>
+                  </select>
+                </div>
+                <label class="control-item"><input id="saveShare" type="checkbox" /><span>Save & Share</span></label>
+                <label class="control-item"><input id="optimize" type="checkbox" checked /><span>Optimize</span></label>
+              </div>
 
-            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-              <h3>Live Camera</h3>
-              <div class="control-item" style="margin-bottom: 1rem;">
-                <span>Camera:</span>
-                <select id="cameraSelect" style="flex:1"></select>
+              <div style="margin-top: 2rem; display: flex; align-items: center; gap: 12px;">
+                <button id="submit" class="btn btn-primary" style="flex: 1; font-size: 1.1rem; padding: 1rem;">Translate
+                  Body Language</button>
+                <div id="loader" class="spinner" style="display:none"></div>
               </div>
-              <div style="display: flex; gap: 10px;">
-                <button id="openCam" class="btn btn-outline" style="flex:1">Open Camera</button>
-                <button id="capture" class="btn btn-primary" style="display:none; flex:1">Capture</button>
-                <button id="closeCam" class="btn btn-outline" style="display:none;">Close</button>
+              <div id="status" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+
+              <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                <h3>Live Camera</h3>
+                <div class="control-item" style="margin-bottom: 1rem;">
+                  <span>Camera:</span>
+                  <select id="cameraSelect" style="flex:1"></select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                  <button id="openCam" class="btn btn-outline" style="flex:1">Open Camera</button>
+                  <button id="capture" class="btn btn-primary" style="display:none; flex:1">Capture</button>
+                  <button id="closeCam" class="btn btn-outline" style="display:none;">Close</button>
+                </div>
+                <video id="cam" autoplay playsinline
+                  style="display:none;width:100%;border-radius:12px; margin-top: 1rem;"></video>
               </div>
-              <video id="cam" autoplay playsinline
-                style="display:none;width:100%;border-radius:12px; margin-top: 1rem;"></video>
             </div>
           </div>
-        </div>
 
-        <div class="result-panel">
-          <div class="panel" style="height: 100%; display: flex; flex-direction: column;">
-            <h3>Translation</h3>
-            <div class="preview-container" id="preview">
-              <div style="color: var(--muted);">No image selected</div>
-            </div>
-            <div id="result" class="interpretation-bubble" style="margin-top: 1.5rem; min-height: 60px;"></div>
-            <div id="confidence-container" style="display:none">
-              <div style="display:flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted);">
-                <span>Confidence</span><span id="confidence-val">0%</span>
+          <div class="result-panel">
+            <div class="panel" style="height: 100%; display: flex; flex-direction: column;">
+              <h3>Translation</h3>
+              <div class="preview-container" id="preview">
+                <div style="color: var(--muted);">No image selected</div>
               </div>
-              <div class="confidence-meter">
-                <div id="confidence-fill" class="confidence-fill" style="width: 0%"></div>
+              <div id="result" class="interpretation-bubble" style="margin-top: 1.5rem; min-height: 60px;"></div>
+              <div id="confidence-container" style="display:none">
+                <div style="display:flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted);">
+                  <span>Confidence</span><span id="confidence-val">0%</span>
+                </div>
+                <div class="confidence-meter">
+                  <div id="confidence-fill" class="confidence-fill" style="width: 0%"></div>
+                </div>
               </div>
-            </div>
-            <div id="shareRow" class="control-group" style="display:none;">
-              <span style="font-size: 0.8rem; color: var(--muted);">Link:</span>
-              <a id="shareLink" href="#" target="_blank"
-                style="font-size: 0.8rem; flex: 1; overflow: hidden; text-overflow: ellipsis;"></a>
-              <button id="copyShare" class="btn btn-outline"
-                style="padding: 0.3rem 0.6rem; font-size: 0.7rem;">Copy</button>
-            </div>
-            <div class="control-group" style="margin-top: auto; padding-top: 1.5rem;">
-              <div class="control-item" style="width: 100%;"><span>Voice:</span><select id="voiceSelect"
-                  style="flex:1"></select></div>
-              <div style="display: flex; gap: 8px; width: 100%;">
-                <button id="read" class="btn btn-outline" style="flex:1">Speak</button>
-                <input id="rateSlider" type="range" min="0.8" max="1.3" step="0.05" value="1" style="width: 60px" />
-                <label class="control-item"><input id="autoplay" type="checkbox" /><span>Auto</span></label>
+              <div id="shareRow" class="control-group" style="display:none;">
+                <span style="font-size: 0.8rem; color: var(--muted);">Link:</span>
+                <a id="shareLink" href="#" target="_blank"
+                  style="font-size: 0.8rem; flex: 1; overflow: hidden; text-overflow: ellipsis;"></a>
+                <button id="copyShare" class="btn btn-outline"
+                  style="padding: 0.3rem 0.6rem; font-size: 0.7rem;">Copy</button>
+              </div>
+              <div class="control-group" style="margin-top: auto; padding-top: 1.5rem;">
+                <div class="control-item" style="width: 100%;"><span>Voice:</span><select id="voiceSelect"
+                    style="flex:1"></select></div>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                  <button id="read" class="btn btn-outline" style="flex:1">Speak</button>
+                  <input id="rateSlider" type="range" min="0.8" max="1.3" step="0.05" value="1" style="width: 60px" />
+                  <label class="control-item"><input id="autoplay" type="checkbox" /><span>Auto</span></label>
+                </div>
               </div>
             </div>
           </div>
@@ -445,6 +493,88 @@
     const closeCamBtn = document.getElementById('closeCam');
     const cameraSelect = document.getElementById('cameraSelect');
     const refreshDevicesBtn = document.getElementById('refreshDevices');
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const closeAuth = document.getElementById('closeAuth');
+    const authBtn = document.getElementById('authBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loggedInView = document.getElementById('loggedInView');
+    const loggedOutView = document.getElementById('loggedOutView');
+    const authStatus = document.getElementById('authStatus');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+
+    let token = localStorage.getItem('dt_token');
+    let user = JSON.parse(localStorage.getItem('dt_user') || 'null');
+
+    function updateAuthUI() {
+      if (token && user) {
+        loggedInView.style.display = 'block';
+        loggedOutView.style.display = 'none';
+        authBtn.style.display = 'none';
+        logoutBtn.style.display = 'block';
+      } else {
+        loggedInView.style.display = 'none';
+        loggedOutView.style.display = 'block';
+        authBtn.style.display = 'block';
+        logoutBtn.style.display = 'none';
+      }
+    }
+
+    function toggleAuthModal(show) {
+      authModal.style.display = show ? 'flex' : 'none';
+      if (show) authStatus.textContent = '';
+    }
+
+    authBtn.addEventListener('click', () => toggleAuthModal(true));
+    document.querySelectorAll('.btn-auth-trigger').forEach(b => b.addEventListener('click', () => toggleAuthModal(true)));
+    closeAuth.addEventListener('click', () => toggleAuthModal(false));
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authStatus.innerHTML = '<div class="spinner" style="margin:0 auto"></div>';
+
+      const email = authEmail.value.trim();
+      const password = authPassword.value.trim();
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        // Handle FastAPI validation errors (422) specifically
+        if (res.status === 422 && data.detail) {
+          const msg = Array.isArray(data.detail) ? data.detail.map(e => e.msg).join(', ') : data.detail;
+          throw new Error("Validation Error: " + msg);
+        }
+        if (!res.ok) throw new Error(data.detail || 'Login failed');
+
+        token = data.access_token;
+        user = data.user;
+        localStorage.setItem('dt_token', token);
+        localStorage.setItem('dt_user', JSON.stringify(user));
+
+        updateAuthUI();
+        toggleAuthModal(false);
+      } catch (err) {
+        authStatus.innerHTML = `<span style="color:var(--danger)">${err.message}</span>`;
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('dt_token');
+      localStorage.removeItem('dt_user');
+      token = null;
+      user = null;
+      updateAuthUI();
+    });
+
+    // Initial Auth UI check
+    updateAuthUI();
+
     let camStream = null;
     let capturedBlob = null;
     let currentFile = null;
@@ -452,6 +582,7 @@
     let currentVoiceName = localStorage.getItem('tts.voice') || '';
     let currentRate = parseFloat(localStorage.getItem('tts.rate') || '1');
     rateSlider.value = currentRate;
+
 
     function setLoading(loading) {
       submitBtn.disabled = loading;
@@ -551,7 +682,13 @@
         if (toneSelect.value) form.append('tone', toneSelect.value);
         if (saveShare.checked) form.append('save', 'true');
 
-        const res = await fetch(`${API_BASE}/api/interpret`, { method: 'POST', body: form });
+        const res = await fetch(`${API_BASE}/api/v1/interpret`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: form
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed');
 
