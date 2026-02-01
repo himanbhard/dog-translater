@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 from fastapi import HTTPException
 
 from ..config import get_settings
-from ..db.interfaces import Repository
+from ..gemini_client import analyze_image_with_gemini
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,11 @@ class InterpretationService:
         
 
         try:
-            # TODO: Call Gemini via Vertex AI client here
-            result = {"explanation": "Placeholder for Gemini analysis", "confidence": 0.5, "source": "vertex_gemini"}
+            result = await analyze_image_with_gemini(
+                image_bytes=image_bytes,
+                mime_type=mime_type,
+                tone=tone,
+            )
             
             # 3. Parse/Sanitize
             explanation = str(result.get("explanation", "") or "").strip()
@@ -43,7 +46,7 @@ class InterpretationService:
                 "status": "ok",
                 "explanation": explanation,
                 "confidence": confidence,
-                "source": "bedrock",
+                "source": "vertex_gemini",
             }
             
             # 4. Save to DB (Persistence)
