@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
-from .bedrock_client import analyze_image as analyze_with_bedrock, _parse_json_fallback
 from .storage import init_db  # legacy init for backward compat
 from .db.deps import get_repo
 from .db.interfaces import Repository
