@@ -9,10 +9,8 @@ class Settings:
     max_upload_bytes: int
     db_backend: str
     sqlite_path: str
-    bedrock_region: str
-    bedrock_model_id: str
-    aws_access_key_id: str | None
-    aws_secret_access_key: str | None
+    vertex_ai_project_id: str
+    vertex_ai_location: str
     jwt_secret_key: str
     jwt_algorithm: str
 
@@ -40,11 +38,9 @@ def get_settings() -> Settings:
     db_backend = os.getenv("DB_BACKEND", "sqlite").lower()
     sqlite_path = os.getenv("SQLITE_PATH", os.path.join(os.getcwd(), "data", "app.db"))
 
-    # Bedrock config
-    bedrock_region = os.getenv("AWS_REGION", "us-east-1")
-    bedrock_model_id = os.getenv("BEDROCK_MODEL_ID", "meta.llama3-2-11b-instruct-v1:0")
-    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    # Vertex AI / Gemini config
+    vertex_ai_project_id = os.getenv("VERTEX_AI_PROJECT_ID", "your-gcp-project-id") # Default for local dev if not set
+    vertex_ai_location = os.getenv("VERTEX_AI_LOCATION", "us-east1") # Default for local dev if not set
     
     # Auth config
     jwt_secret_key = os.getenv("JWT_SECRET_KEY", "changeme_dev_secret")
