@@ -71,7 +71,7 @@ async def analyze_image_with_gemini(
 
         return {
             "status": "ok",
-            "explanation": explanation,'''
+            "explanation": explanation,
             "confidence": confidence,
             "source": "vertex_gemini",
         }
