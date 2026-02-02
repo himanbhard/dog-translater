@@ -46,9 +46,17 @@ async def analyze_image_with_gemini(
 
         logger.info("Sending image to Gemini Pro Vision...")
         responses = _model.generate_content(prompt_parts)
-        
-        # Extract content and attempt to parse JSON
+
+        # --- Detailed Error Logging Start ---
+        if not responses or not responses.candidates:
+            logger.error("Gemini returned no valid candidates. Raw response: %s", responses)
+            raise Exception("Gemini API returned no content.")
+
         text_response = responses.candidates[0].content.text
+        if not text_response:
+            logger.error("Gemini candidate content is empty. Raw response: %s", responses)
+            raise Exception("Gemini API returned empty content.")
+        # --- Detailed Error Logging End ---
         logger.info(f"Gemini raw response: {text_response}")
 
         # Try to parse the structured JSON from Gemini's response
