@@ -3,7 +3,6 @@ from typing import Dict, Any, Optional
 
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel, Part, Image
-from google.cloud.vertexai.helpers import Image as GcsImage
 import io
 
 from .config import get_settings
