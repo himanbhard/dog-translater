@@ -1,6 +1,8 @@
+from __future__ import annotations
 import logging
 import uuid
 from typing import Dict, Any, Optional
+from ..db.interfaces import Repository
 
 from fastapi import HTTPException
 
@@ -18,7 +20,7 @@ class InterpretationService:
         image_bytes: bytes,
         mime_type: str,
         tone: Optional[str] = None,
-        repo: Optional[Repository] = None,
+        repo: Optional['Repository'] = None,
         save: bool = False
     ) -> Dict[str, Any]:
         """
