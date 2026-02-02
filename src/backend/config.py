@@ -50,10 +50,8 @@ def get_settings() -> Settings:
         max_upload_bytes=max_upload_bytes,
         db_backend=db_backend,
         sqlite_path=sqlite_path,
-        bedrock_region=bedrock_region,
-        bedrock_model_id=bedrock_model_id,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
+        vertex_ai_project_id=vertex_ai_project_id,
+        vertex_ai_location=vertex_ai_location,
         jwt_secret_key=jwt_secret_key,
         jwt_algorithm=jwt_algorithm,
     )
