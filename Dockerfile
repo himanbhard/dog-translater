@@ -4,10 +4,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
+RUN set -ex
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
-RUN ls -l /app/
-RUN pip freeze
+RUN cat requirements.txt
+RUN python -c "import sys; print(sys.path)"
 
 COPY src /app/src
 COPY .env.template /app/.env.template
