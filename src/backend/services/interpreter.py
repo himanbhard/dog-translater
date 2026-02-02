@@ -13,7 +13,7 @@ class InterpretationService:
     def __init__(self):
         self.settings = get_settings()
 
-    def interpret(
+    async def interpret(
         self,
         image_bytes: bytes,
         mime_type: str,
