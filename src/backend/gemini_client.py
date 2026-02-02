@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Dict, Any, Optional
 
@@ -27,7 +28,7 @@ async def analyze_image_with_gemini(
         # Prepare the image for Gemini
         # Vertex AI Image Part requires a GCS path or raw bytes/PIL Image
         # Since we have bytes, we'll wrap it.
-        
+
         # Determine prompt based on tone
         if tone == "playful":
             tone_prompt = "Respond in a playful, first-person tone as if you are the dog. Be very enthusiastic."
@@ -46,6 +47,7 @@ async def analyze_image_with_gemini(
 
         logger.info("Sending image to Gemini Pro Vision...")
         responses = _model.generate_content(prompt_parts)
+        await asyncio.sleep(5) # User-requested delay for rate limiting
 
         # --- Detailed Error Logging Start ---
         if not responses or not responses.candidates:
