@@ -7,3 +7,5 @@ Pillow
 python-jose[cryptography]
 passlib[argon2]
 argon2-cffi
+google-cloud-aiplatform
+# Force rebuild of dependencies
