@@ -269,6 +269,14 @@ def share_page(share_id: str) -> HTMLResponse:
     """
     return HTMLResponse(content=html)
 
+@app.get("/debug-routes")
+def debug_routes() -> JSONResponse:
+    routes_list = []
+    for route in app.routes:
+        if hasattr(route, "path") and hasattr(route, "methods"):
+            routes_list.append({"path": route.path, "methods": list(route.methods)})
+    return JSONResponse(content=routes_list)
+
 @app.get("/api/registry")
 def api_registry() -> JSONResponse:
     """Return structured, searchable API documentation for this service."""
