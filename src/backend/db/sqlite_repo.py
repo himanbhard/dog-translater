@@ -39,8 +39,8 @@ class SqliteRepository(Repository):
                 conn.execute("INSERT INTO schema_migrations(version) VALUES (?)", (v,))
 
     # Users
-    def create_user(self, email: str, password_hash: str) -> User:
-        user_id = uuid.uuid4().hex
+    def create_user(self, email: str, password_hash: str, id_: Optional[str] = None) -> User:
+        user_id = id_ or uuid.uuid4().hex
         with self._connect() as conn:
             conn.execute(
                 "INSERT INTO users(id, email, password_hash, is_verified) VALUES (?, ?, ?, 1)",

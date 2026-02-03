@@ -224,6 +224,25 @@ async def _handle_interpret(image: UploadFile, tone: str | None, save: bool, rep
             },
         )
 
+@app.get("/api/v1/history")
+async def get_user_history(
+    repo: Repository = Depends(get_repo),
+    current_user: TokenData = Depends(get_current_user)
+) -> JSONResponse:
+    """Returns the authenticated user's dog translation history."""
+    try:
+        items = repo.list_interpretations(user_id=current_user.uid)
+        return JSONResponse(content=[{
+            "id": i.id,
+            "explanation": i.explanation,
+            "confidence": i.confidence,
+            "created_at": i.created_at,
+            "image_path": i.image_path
+        } for i in items])
+    except Exception as e:
+        logger.exception("Failed to fetch history: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to fetch history")
+
 @app.get("/api/share/{share_id}")
 def get_shared_interpretation(share_id: str) -> JSONResponse:
     repo = get_repo()

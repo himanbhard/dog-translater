@@ -10,7 +10,7 @@ class Repository(ABC):
 
     # Users
     @abstractmethod
-    def create_user(self, email: str, password_hash: str) -> User:
+    def create_user(self, email: str, password_hash: str, id_: Optional[str] = None) -> User:
         ...
 
     @abstractmethod

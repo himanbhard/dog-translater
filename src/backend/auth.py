@@ -72,7 +72,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         from .db.deps import get_repo
         repo = get_repo()
         if not repo.get_user_by_email(email):
-             repo.create_user(email, "firebase_auth") # Password hash irrelevant for Firebase users
+             repo.create_user(email, "firebase_auth", id_=uid) # Use Firebase UID as local ID
         
         return TokenData(username=email, uid=uid)
     except Exception as e:
