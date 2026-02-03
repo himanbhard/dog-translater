@@ -8,4 +8,5 @@ python-jose[cryptography]
 passlib[argon2]
 argon2-cffi
 google-cloud-aiplatform
+firebase-admin
 # Force rebuild of dependencies

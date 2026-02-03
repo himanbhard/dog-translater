@@ -6,6 +6,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+import os
+import firebase_admin
+from firebase_admin import auth, credentials
 
 from .config import get_settings
 
@@ -16,10 +19,23 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+    uid: Optional[str] = None
 
 # Logic
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
+
+# Initialize Firebase Admin
+_settings = get_settings()
+try:
+    if os.path.exists(_settings.firebase_service_account_path):
+        cred = credentials.Certificate(_settings.firebase_service_account_path)
+        firebase_admin.initialize_app(cred)
+    else:
+        # Fallback to default credentials (useful for Cloud Run with Service Account)
+        firebase_admin.initialize_app()
+except Exception as e:
+    print(f"Firebase admin initialization warning: {e}")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -45,17 +61,29 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    # Try Firebase Token Verification first
     try:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-        username: str = payload.get("sub")
-        if username is None:
+        decoded_token = auth.verify_id_token(token)
+        uid = decoded_token.get("uid")
+        email = decoded_token.get("email")
+        
+        # Auto-provision user in local DB if needed
+        from .db.deps import get_repo
+        repo = get_repo()
+        if not repo.get_user_by_email(email):
+             repo.create_user(email, "firebase_auth") # Password hash irrelevant for Firebase users
+        
+        return TokenData(username=email, uid=uid)
+    except Exception as e:
+        # print(f"Firebase token verification failed: {e}")
+        # If Firebase verification fails, try the custom JWT (for backward compat/legacy tests)
+        try:
+            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+            username: str = payload.get("sub")
+            uid: str = payload.get("uid")
+            if username is None:
+                raise credentials_exception
+            return TokenData(username=username, uid=uid)
+        except JWTError:
             raise credentials_exception
-        token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
-    
-    # In a real app, you would fetch the user from DB here to ensure they still exist/are active.
-    # user = get_user(fake_users_db, username=token_data.username)
-    # if user is None: raise credentials_exception
-    
-    return token_data

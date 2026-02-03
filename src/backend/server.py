@@ -168,7 +168,7 @@ async def interpret_dog_body_language_v1(
     repo: Repository = Depends(get_repo),
     current_user: TokenData = Depends(get_current_user), # Require Auth for V1
 ) -> JSONResponse:
-    return await _handle_interpret(image, tone, save, repo)
+    return await _handle_interpret(image, tone, save, repo, current_user.uid)
 
 
 # --- Legacy API (Web Compatibility) ---
@@ -181,10 +181,10 @@ async def interpret_dog_body_language(
     repo: Repository = Depends(get_repo),
 ) -> JSONResponse:
     # Legacy endpoint does not require Auth
-    return await _handle_interpret(image, tone, save, repo)
+    return await _handle_interpret(image, tone, save, repo, None)
 
 
-async def _handle_interpret(image: UploadFile, tone: str | None, save: bool, repo: Repository) -> JSONResponse:
+async def _handle_interpret(image: UploadFile, tone: str | None, save: bool, repo: Repository, user_id: str | None) -> JSONResponse:
     logger.info("Received upload: filename=%s content_type=%s", image.filename, image.content_type)
 
     if image.content_type not in {"image/jpeg", "image/png"}:
@@ -198,12 +198,13 @@ async def _handle_interpret(image: UploadFile, tone: str | None, save: bool, rep
 
     try:
         # Use Service Layer
-        result = interpreter_service.interpret(
+        result = await interpreter_service.interpret(
             image_bytes=data,
             mime_type=image.content_type,
             tone=tone,
             repo=repo,
-            save=save
+            save=save,
+            user_id=user_id
         )
         
         logger.info("Responding with success (source=%s): confidence=%.2f", result["source"], result["confidence"])

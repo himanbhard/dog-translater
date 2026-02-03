@@ -13,6 +13,7 @@ class Settings:
     vertex_ai_location: str
     jwt_secret_key: str
     jwt_algorithm: str
+    firebase_service_account_path: str
 
 
 def _get_float(name: str, default: float) -> float:
@@ -45,6 +46,7 @@ def get_settings() -> Settings:
     # Auth config
     jwt_secret_key = os.getenv("JWT_SECRET_KEY", "changeme_dev_secret")
     jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
+    firebase_service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "firebase-service-account.json")
 
     return Settings(
         max_upload_bytes=max_upload_bytes,
@@ -54,4 +56,5 @@ def get_settings() -> Settings:
         vertex_ai_location=vertex_ai_location,
         jwt_secret_key=jwt_secret_key,
         jwt_algorithm=jwt_algorithm,
+        firebase_service_account_path=firebase_service_account_path,
     )

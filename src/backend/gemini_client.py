@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Any, Optional
 
 import vertexai
-from vertexai.preview.generative_models import GenerativeModel, Part, Image
+from vertexai.generative_models import GenerativeModel, Part, Image
 import io
 
 from .config import get_settings
@@ -11,12 +11,16 @@ from .config import get_settings
 logger = logging.getLogger(__name__)
 
 # Initialize Vertex AI globally (or per-request if context varies)
+logger.info("Attempting to initialize Vertex AI...")
 _settings = get_settings()
 vertexai.init(project=_settings.vertex_ai_project_id, location=_settings.vertex_ai_location)
+logger.info("Vertex AI initialized. Project: %s, Location: %s", _settings.vertex_ai_project_id, _settings.vertex_ai_location)
 
-_model = GenerativeModel("gemini-pro-vision")
+logger.info("Attempting to load Gemini model...")
+_model = GenerativeModel("gemini-2.0-flash")
+logger.info("Gemini model loaded.")
 
-async def analyze_image_with_gemini(
+def analyze_image_with_gemini(
     image_bytes: bytes,
     mime_type: str,
     tone: Optional[str] = None,
@@ -39,15 +43,20 @@ async def analyze_image_with_gemini(
         else:
             tone_prompt = "Respond in a friendly, first-person tone as if you are the dog."
 
+        prompt = f"Analyze the body language of the dog in this image. {tone_prompt}. Explain what the dog is feeling or trying to communicate. Also provide a confidence score between 0.0 and 1.0. Output should be a JSON object with 'explanation' and 'confidence' keys."
+
         prompt_parts = [
-            Part.from_text(f"Analyze the body language of the dog in this image. {tone_prompt}."),
             Part.from_data(data=image_bytes, mime_type=mime_type),
-            Part.from_text("Explain what the dog is feeling or trying to communicate. Also provide a confidence score between 0.0 and 1.0 (e.g., {\"explanation\": \"...\", \"confidence\": 0.8})."),
+            Part.from_text(prompt),
         ]
 
         logger.info("Sending image to Gemini Pro Vision...")
-        responses = _model.generate_content(prompt_parts)
-        await asyncio.sleep(5) # User-requested delay for rate limiting
+        try:
+            responses = _model.generate_content(prompt_parts)
+            logger.info("Raw Gemini responses object: %s", responses)
+        except Exception as e:
+            logger.exception("Error during Gemini content generation: %s", e)
+            raise
 
         # --- Detailed Error Logging Start ---
         if not responses or not responses.candidates:

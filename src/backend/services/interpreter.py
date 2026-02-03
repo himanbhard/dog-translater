@@ -1,6 +1,7 @@
 from __future__ import annotations
 import logging
 import uuid
+import asyncio
 from typing import Dict, Any, Optional
 from ..db.interfaces import Repository
 
@@ -21,19 +22,21 @@ class InterpretationService:
         mime_type: str,
         tone: Optional[str] = None,
         repo: Optional['Repository'] = None,
-        save: bool = False
+        save: bool = False,
+        user_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Orchestrates the interpretation flow:
-        1. Checks AWS credentials.
-        2. Calls Bedrock for analysis.
-        3. Parses/Sanitizes the result.
-        4. Saves to database if requested.
+        1. Calls Gemini for analysis.
+        2. Parses/Sanitizes the result.
+        3. Saves to database if requested.
         """
         
 
         try:
-            result = await analyze_image_with_gemini(
+            # Gemini call is synchronous, so we run it in a thread to avoid blocking the event loop.
+            result = await asyncio.to_thread(
+                analyze_image_with_gemini,
                 image_bytes=image_bytes,
                 mime_type=mime_type,
                 tone=tone,
@@ -55,7 +58,7 @@ class InterpretationService:
             if save and repo:
                 share_id = uuid.uuid4().hex
                 try:
-                    repo.save_interpretation(share_id, explanation, confidence)
+                    repo.save_interpretation(share_id, explanation, confidence, user_id=user_id)
                     response["share_id"] = share_id
                 except Exception as e:
                     logger.exception("Failed to save interpretation: %s", e)
@@ -66,9 +69,4 @@ class InterpretationService:
             raise
         except Exception as e:
             logger.exception("Vertex AI call failed in service layer: %s", e)
-            # Re-raise or return a structured error? 
-            # The current server implementation returned a 502 JSONResponse.
-            # Services typically shouldn't return JSONResponses (that's the controller's job).
-            # We'll raise a custom exception or allow the caller to handle generic exceptions.
-            # For now, to match previous behavior, we'll re-raise generic exceptions and let the controller catch them.
             raise e
