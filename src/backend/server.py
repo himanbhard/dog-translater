@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Any, Dict
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -64,12 +64,14 @@ def startup_event() -> None:
 
 # --- Services ---
 from .services.interpreter import InterpretationService
+from .services.google_search_service import GoogleSearchService
 from .auth import Token, create_access_token, get_current_user, TokenData, get_password_hash, verify_password
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from pydantic import BaseModel
 
 interpreter_service = InterpretationService()
+google_search_service = GoogleSearchService()
 
 # --- Auth Models ---
 class LoginRequest(BaseModel):
@@ -223,6 +225,45 @@ async def _handle_interpret(image: UploadFile, tone: str | None, save: bool, rep
                 "error": "upstream_failure",
             },
         )
+
+# --- Explain Feature ---
+
+@app.get("/api/v1/explain")
+async def explain_pet_behavior(
+    behavior: str = Query(
+        ..., 
+        min_length=1, 
+        max_length=200,
+        description="The pet behavior to search and explain"
+    ),
+    current_user: TokenData = Depends(get_current_user),
+) -> JSONResponse:
+    """
+    Search for explanations of a specific pet behavior using Google Custom Search.
+    
+    Returns summarized insights from reputable pet care sources.
+    """
+    try:
+        results = await google_search_service.search_pet_behavior(behavior)
+        return JSONResponse(content={
+            "status": "ok",
+            "behavior": behavior.strip(),
+            "results": results,
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Explain feature failed: %s", e)
+        return JSONResponse(
+            status_code=502,
+            content={
+                "status": "error",
+                "behavior": behavior.strip(),
+                "results": [],
+                "error": "upstream_failure",
+            },
+        )
+
 
 @app.get("/api/v1/history")
 async def get_user_history(

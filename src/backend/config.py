@@ -14,6 +14,8 @@ class Settings:
     jwt_secret_key: str
     jwt_algorithm: str
     firebase_service_account_path: str
+    google_search_api_key: str
+    google_search_engine_id: str
 
 
 def _get_float(name: str, default: float) -> float:
@@ -48,6 +50,10 @@ def get_settings() -> Settings:
     jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
     firebase_service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "firebase-service-account.json")
 
+    # Google Custom Search API config
+    google_search_api_key = os.getenv("GOOGLE_SEARCH_API_KEY", "")
+    google_search_engine_id = os.getenv("GOOGLE_SEARCH_ENGINE_ID", "")
+
     return Settings(
         max_upload_bytes=max_upload_bytes,
         db_backend=db_backend,
@@ -57,4 +63,6 @@ def get_settings() -> Settings:
         jwt_secret_key=jwt_secret_key,
         jwt_algorithm=jwt_algorithm,
         firebase_service_account_path=firebase_service_account_path,
+        google_search_api_key=google_search_api_key,
+        google_search_engine_id=google_search_engine_id,
     )

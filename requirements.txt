@@ -9,4 +9,5 @@ passlib[argon2]
 argon2-cffi
 google-cloud-aiplatform
 firebase-admin
+requests==2.31.0
 # Force rebuild of dependencies
