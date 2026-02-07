@@ -10,15 +10,24 @@ from .config import get_settings
 
 logger = logging.getLogger(__name__)
 
-# Initialize Vertex AI globally (or per-request if context varies)
-logger.info("Attempting to initialize Vertex AI...")
-_settings = get_settings()
-vertexai.init(project=_settings.vertex_ai_project_id, location=_settings.vertex_ai_location)
-logger.info("Vertex AI initialized. Project: %s, Location: %s", _settings.vertex_ai_project_id, _settings.vertex_ai_location)
+# Global cache
+_model = None
 
-logger.info("Attempting to load Gemini model...")
-_model = GenerativeModel("gemini-2.0-flash")
-logger.info("Gemini model loaded.")
+def _get_model() -> GenerativeModel:
+    global _model
+    if _model:
+        return _model
+        
+    logger.info("Initializing Vertex AI and loading Gemini model...")
+    _settings = get_settings()
+    vertexai.init(project=_settings.vertex_ai_project_id, location=_settings.vertex_ai_location)
+    
+    _model = GenerativeModel("gemini-1.5-flash-001") # Pinned version for stability, prompt said 2.0 but standard is 1.5 or pro
+    # Let's stick to what was there or updated generic
+    _model = GenerativeModel("gemini-2.0-flash") 
+    
+    logger.info("Gemini model loaded successfully.")
+    return _model
 
 def analyze_image_with_gemini(
     image_bytes: bytes,
@@ -59,7 +68,8 @@ def analyze_image_with_gemini(
 
         logger.info("Sending image to Gemini Pro Vision...")
         try:
-            responses = _model.generate_content(prompt_parts)
+            model = _get_model()
+            responses = model.generate_content(prompt_parts)
             logger.info("Raw Gemini responses object: %s", responses)
         except Exception as e:
             logger.exception("Error during Gemini content generation: %s", e)

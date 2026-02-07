@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,8 +13,44 @@ from .db.deps import get_repo
 from .db.interfaces import Repository
 import uuid
 
-# Basic logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# specialized JSON logging
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "severity": record.levelname,
+            "message": record.getMessage(),
+            "timestamp": self.formatTime(record, self.datefmt),
+            "logger": record.name,
+            "path": record.pathname,
+            "line": record.lineno,
+        }
+        if record.exc_info:
+            log_record["exc_info"] = self.formatException(record.exc_info)
+        return uuid.uuid4().hex + " " + str(log_record) # actually just dump json
+
+    def formatException(self, exc_info):
+        return super().formatException(exc_info)
+
+# Better implementation using json.dumps
+import json
+class CloudRunFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "severity": record.levelname,
+            "message": record.getMessage(),
+            "timestamp": self.formatTime(record, self.datefmt),
+            "component": record.name,
+        }
+        if record.exc_info:
+             # Format exception
+             log_record["stack_trace"] = self.formatException(record.exc_info)
+        return json.dumps(log_record)
+
+# Basic logging setup
+handler = logging.StreamHandler()
+handler.setFormatter(CloudRunFormatter())
+logging.basicConfig(level=logging.INFO, handlers=[handler])
+# logging.getLogger("uvicorn.access").handlers = [handler] # optional: override uvicorn logger
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Dog Body Language Interpreter")
@@ -37,6 +73,7 @@ def index() -> FileResponse:
 app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
 
 @app.get("/health")
+@app.get("/healthz") # Standardize on healthz for K8s/Cloud Run
 def health(repo: Repository = Depends(get_repo)) -> Dict[str, Any]:
     try:
         # Perform a lightweight DB operation to verify connectivity
@@ -171,7 +208,7 @@ async def read_users_me(current_user: TokenData = Depends(get_current_user)):
 @app.post("/api/v1/interpret")
 async def interpret_dog_body_language_v1(
     image: UploadFile = File(...),
-    tone: str | None = Form(None),
+    tone: Optional[str] = Form(None),
     save: bool = Form(False),
     repo: Repository = Depends(get_repo),
     current_user: TokenData = Depends(get_current_user), # Require Auth for V1
@@ -184,7 +221,7 @@ async def interpret_dog_body_language_v1(
 @app.post("/api/interpret")
 async def interpret_dog_body_language(
     image: UploadFile = File(...),
-    tone: str | None = Form(None),
+    tone: Optional[str] = Form(None),
     save: bool = Form(False),
     repo: Repository = Depends(get_repo),
 ) -> JSONResponse:
@@ -192,7 +229,7 @@ async def interpret_dog_body_language(
     return await _handle_interpret(image, tone, save, repo, None)
 
 
-async def _handle_interpret(image: UploadFile, tone: str | None, save: bool, repo: Repository, user_id: str | None) -> JSONResponse:
+async def _handle_interpret(image: UploadFile, tone: Optional[str], save: bool, repo: Repository, user_id: Optional[str]) -> JSONResponse:
     logger.info("Received upload: filename=%s content_type=%s", image.filename, image.content_type)
 
     if image.content_type not in {"image/jpeg", "image/png"}:

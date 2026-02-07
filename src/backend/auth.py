@@ -67,7 +67,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     
     # Try Firebase Token Verification first
     try:
-        decoded_token = auth.verify_id_token(token)
+        decoded_token = auth.verify_id_token(token, check_revoked=True)
         uid = decoded_token.get("uid")
         email = decoded_token.get("email")
         
@@ -78,6 +78,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
              repo.create_user(email, "firebase_auth", id_=uid) # Use Firebase UID as local ID
         
         return TokenData(username=email, uid=uid)
+    except (auth.ExpiredIdTokenError, auth.RevokedIdTokenError, auth.InvalidIdTokenError) as e:
+        logger.warning(f"Firebase token validation failed: {e}")
+        raise credentials_exception
     except Exception as e:
         # print(f"Firebase token verification failed: {e}")
         # If Firebase verification fails, try the custom JWT (for backward compat/legacy tests)
