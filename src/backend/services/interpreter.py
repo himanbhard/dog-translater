@@ -46,15 +46,19 @@ class InterpretationService:
             explanation = str(result.get("explanation", "") or "").strip()
 
             confidence = float(result.get("confidence", 0.5))
+            has_pet = result.get("has_pet", True)
             
             response: Dict[str, Any] = {
                 "status": "ok",
                 "explanation": explanation,
                 "confidence": confidence,
+                "has_pet": has_pet,
                 "source": "vertex_gemini",
             }
             
             # 4. Save to DB (Persistence)
+            # Only save if a pet was actually detected, or if we want to log failures too?
+            # Let's save everything for now, but maybe flag it.
             if save and repo:
                 share_id = uuid.uuid4().hex
                 try:

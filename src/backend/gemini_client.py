@@ -43,7 +43,14 @@ def analyze_image_with_gemini(
         else:
             tone_prompt = "Respond in a friendly, first-person tone as if you are the dog."
 
-        prompt = f"Analyze the body language of the dog in this image. {tone_prompt}. Explain what the dog is feeling or trying to communicate. Also provide a confidence score between 0.0 and 1.0. Output should be a JSON object with 'explanation' and 'confidence' keys."
+        prompt = (
+            f"Analyze the image. First, determine if there is a dog in the image. "
+            f"If there is no dog, output a JSON object with 'has_pet': false, 'explanation': 'No dog detected in this image. Please upload a photo of a dog.', and 'confidence': 1.0. "
+            f"If there is a dog, analyze its body language. {tone_prompt}. "
+            f"Explain what the dog is feeling or trying to communicate. "
+            f"Also provide a confidence score between 0.0 and 1.0. "
+            f"Output must be a valid JSON object with keys: 'has_pet' (boolean), 'explanation' (string), and 'confidence' (float)."
+        )
 
         prompt_parts = [
             Part.from_data(data=image_bytes, mime_type=mime_type),
@@ -71,6 +78,7 @@ def analyze_image_with_gemini(
         logger.info(f"Gemini raw response: {text_response}")
 
         # Try to parse the structured JSON from Gemini's response
+        has_pet = True
         try:
             import json
             start = text_response.find('{')
@@ -80,6 +88,7 @@ def analyze_image_with_gemini(
                 parsed_data = json.loads(json_str)
                 explanation = parsed_data.get("explanation", text_response)
                 confidence = float(parsed_data.get("confidence", 0.5))
+                has_pet = parsed_data.get("has_pet", True)
             else:
                 explanation = text_response
                 confidence = 0.5 # Default if no structured JSON is found
@@ -91,6 +100,7 @@ def analyze_image_with_gemini(
             "status": "ok",
             "explanation": explanation,
             "confidence": confidence,
+            "has_pet": has_pet,
             "source": "vertex_gemini",
         }
 

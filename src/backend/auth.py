@@ -25,6 +25,9 @@ class TokenData(BaseModel):
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Initialize Firebase Admin
 _settings = get_settings()
 try:
@@ -35,7 +38,7 @@ try:
         # Fallback to default credentials (useful for Cloud Run with Service Account)
         firebase_admin.initialize_app()
 except Exception as e:
-    print(f"Firebase admin initialization warning: {e}")
+    logger.warning(f"Firebase admin initialization warning: {e}")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

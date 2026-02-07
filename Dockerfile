@@ -13,4 +13,4 @@ COPY .env.template /app/.env.template
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.backend.server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn src.backend.server:app --host 0.0.0.0 --port ${PORT:-8080}"]

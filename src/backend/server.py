@@ -37,8 +37,14 @@ def index() -> FileResponse:
 app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
 
 @app.get("/health")
-def health() -> Dict[str, Any]:
-    return {"status": "ok"}
+def health(repo: Repository = Depends(get_repo)) -> Dict[str, Any]:
+    try:
+        # Perform a lightweight DB operation to verify connectivity
+        repo.get_user_by_email("healthcheck_probe@example.com")
+        return {"status": "ok", "db": "connected"}
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        raise HTTPException(status_code=503, detail="Service Unhealthy")
 
 @app.on_event("startup")
 def startup_event() -> None:
