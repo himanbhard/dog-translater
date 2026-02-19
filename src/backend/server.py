@@ -373,6 +373,27 @@ def share_page(share_id: str) -> HTMLResponse:
     """
     return HTMLResponse(content=html)
 
+@app.get("/api/terms")
+def get_terms_of_service() -> JSONResponse:
+    """Returns the Terms of Service content."""
+    try:
+        # Check current directory (standard dev/prod)
+        file_path = "TERMS_OF_SERVICE.md"
+        if not os.path.exists(file_path):
+             # Try one level up if in src/backend (debug fallback)
+             file_path = "../../../TERMS_OF_SERVICE.md"
+             
+        if not os.path.exists(file_path):
+             logger.warning("TERMS_OF_SERVICE.md not found.")
+             return JSONResponse(status_code=404, content={"detail": "Terms of Service not found."})
+        
+        with open(file_path, "r") as f:
+            content = f.read()
+        return JSONResponse(content={"content": content})
+    except Exception as e:
+        logger.error(f"Failed to read ToS: {e}")
+        return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
+
 @app.get("/debug-routes")
 def debug_routes() -> JSONResponse:
     routes_list = []
@@ -401,6 +422,13 @@ def api_registry() -> JSONResponse:
                     "description": "index.html"
                 },
                 "tags": ["frontend"],
+            },
+            {
+                "name": "Terms of Service",
+                "path": "/api/terms",
+                "methods": ["GET"],
+                "summary": "Returns the Terms of Service content.",
+                "tags": ["legal"],
             },
             {
                 "name": "Health",

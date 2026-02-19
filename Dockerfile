@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src /app/src
 COPY .env.template /app/.env.template
+COPY TERMS_OF_SERVICE.md /app/TERMS_OF_SERVICE.md
 
 EXPOSE 8000
 
